@@ -13,7 +13,7 @@ function App() {
     // Fetch events from NASA EONET API
     const fetchEvents = async () => {
       try {
-        const response = await fetch('https://eonet.gsfc.nasa.gov/api/v2.1/events');
+        const response = await fetch('https://eonet.gsfc.nasa.gov/api/v2.1/events?status=open&days=30&limit=200');
         const data = await response.json();
 
         // Mapping data
