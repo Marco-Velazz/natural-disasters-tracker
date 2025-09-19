@@ -1,8 +1,17 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 
 const containerStyle = { width: "100vw", height: "100vh" };
 const defaultCenter = { lat: 37.7749, lng: -122.4194 };
+
+const mapOptions = {
+  minZoom: 3,
+  restriction: {
+    latLngBounds: { north: 85, south: -85, west: -180, east: 180 },
+    strictBounds: true,
+  },
+};
+
 
 const CATEGORY_CONFIG = [
   { id: 6,  name: 'Drought',          iconUrl: "https://img.icons8.com/?size=80&id=NwYR4CioTprP&format=png" },
@@ -49,9 +58,25 @@ function Map({ events }) {
     });
   }, [events]);
 
+  const [mapRef, setMapRef] = useState(null);
+  const onLoad = useCallback((map) => setMapRef(map), []);
+  const onIdle = useCallback(() => {
+    if (!mapRef) return;
+    const c = mapRef.getCenter();
+
+    // keep latitude sane so users can’t drag to the poles
+    const lat = Math.max(-85, Math.min(85, c.lat()));
+    // normalize longitude into [-180, 180] while allowing infinite horizontal pan
+    const lng = ((c.lng() + 180) % 360) - 180;
+
+    if (lat !== c.lat() || lng !== c.lng()) {
+      mapRef.setCenter({ lat, lng });
+    }
+  }, [mapRef]);
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-      <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={4}>
+      <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={4} options={mapOptions}>
         {eventsByCategory.map((cat) =>
           cat.events.map((ev) => (
           <Marker
