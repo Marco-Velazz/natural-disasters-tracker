@@ -1,49 +1,95 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 
 const containerStyle = { width: "100vw", height: "100vh" };
 const defaultCenter = { lat: 37.7749, lng: -122.4194 };
-const WILDFIRE_CATEGORY = 8;
+
+const CATEGORY_CONFIG = [
+  { id: 6,  name: 'Drought',          iconUrl: "https://img.icons8.com/?size=80&id=NwYR4CioTprP&format=png" },
+  { id: 8,  name: 'Wildfires',        iconUrl: "https://img.icons8.com/color/48/000000/fire-element.png" },
+  { id: 9,  name: 'Floods',           iconUrl: "https://img.icons8.com/?size=40&id=39381&format=png" },
+  { id: 10, name: "Severe Storms",    iconUrl: "https://img.icons8.com/?size=80&id=Htj5Mil1IpAa&format=png"},
+  { id: 12, name: 'Volcanoes',        iconUrl: "https://img.icons8.com/?size=48&id=y2kv0CrYSX7w&format=png" },
+  { id: 14, name: 'Landslides',       iconUrl: "https://img.icons8.com/?size=48&id=OedcKsGgfldo&format=png" },
+  { id: 15, name: 'Sea and Lake Ice', iconUrl: "https://img.icons8.com/?size=48&id=24355&format=png" },
+  { id: 16, name: 'Earthquakes',      iconUrl: "https://img.icons8.com/?size=80&id=rLrsZbGIEoHL&format=png" },
+];
 
 function Map({ events }) {
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  const wildfireEvents = events
-    .filter(ev => ev.categories.some(cat => cat.id === WILDFIRE_CATEGORY))
-    .map(ev => {
-      const latestGeo = ev.geometry[ev.geometry.length - 1];
-      return { ...ev, latestGeo };
+  // Helper so scaledSize works after Maps JS has loaded
+  const buildIcon = (url) =>
+    window.google? { url, scaledSize: new window.google.maps.Size(40, 40) }
+    : { url };
+
+  const eventsByCategory = useMemo(() => {
+    return CATEGORY_CONFIG.map((cat) => {
+      const catEvents = (events || [])
+      .filter((ev) => ev.categories?.some((c) => c.id === cat.id))
+      .map((ev) => {
+        const latestGeo = ev.geometry?.[ev.geometry.length - 1];
+        // If guard
+        if (
+          !latestGeo ||
+          !Array.isArray(latestGeo.coordinates) ||
+          latestGeo.coordinates.length < 2
+        ) {
+          return null;
+        }
+        const [lng, lat] = latestGeo.coordinates;
+        return {
+          ...ev,
+          latestGeo,
+          position: { lat, lng },
+        };
+      })
+      .filter(Boolean);
+    return { ...cat, events: catEvents };
     });
+  }, [events]);
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
       <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={4}>
-        {wildfireEvents.map(ev => (
+        {eventsByCategory.map((cat) =>
+          cat.events.map((ev) => (
           <Marker
-            key={ev.id}
-            position={{
-              lat: ev.latestGeo.coordinates[1],
-              lng: ev.latestGeo.coordinates[0],
-            }}
-            icon={{
-              url: "https://img.icons8.com/color/48/000000/fire-element.png",
-              scaledSize: { width: 40, height: 40 },
-            }}
-            onClick={() => setSelectedEvent(ev)}
+            key={`${cat.id}-${ev.id}`}
+            position={ev.position}
+            icon={buildIcon(cat.iconUrl)}
+            onClick={() => setSelected({ event: ev, category: cat})}
+            optimized={true}
           />
-        ))}
+        ))
+      )}
 
-        {selectedEvent && (
+        {selected && (
           <InfoWindow
-            position={{
-              lat: selectedEvent.latestGeo.coordinates[1],
-              lng: selectedEvent.latestGeo.coordinates[0],
-            }}
-            onCloseClick={() => setSelectedEvent(null)}
+            position={selected.event.position}
+            onCloseClick={() => setSelected(null)}
           >
-            <div>
-              <h3>{selectedEvent.title}</h3>
-              <p>ID: {selectedEvent.id}</p>
+            <div style={{ maxWidth: 260 }}>
+              <h3 style={{margin: 0 }}>{selected.title}</h3>
+              <p style={{ margin: "4px 0"}}>
+                <strong>Name:</strong> {selected.event.title}
+              </p>
+              <p style={{ margin: "4px 0"}}>
+                <strong>Event ID:</strong> {selected.event.id}
+              </p>
+              {selected.event.latestGeo?.date && (
+                <p style={{ margin: "4px 0" }}>
+                  <strong>Last Update:</strong>{" "}
+                  {new Date(selected.event.latestGeo.date).toLocaleString()}
+                </p>
+              )}
+              {selected.event.link && (
+                <p style={{ margin: "4px 0"}}>
+                  <a href={selected.event.link} target="_blank" rel="noreferrer">
+                    View on EONET
+                  </a>
+                </p>
+              )}
             </div>
           </InfoWindow>
         )}

@@ -41,11 +41,17 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <Header />
-      { !loading ?  <Map events={events} /> : <Loader /> }
-    </div>
-  );
+  <div>
+    {loading ? (
+      <Loader />
+    ) : (
+      <>
+        <Header />
+        <Map events={events} />
+      </>
+    )}
+  </div>
+);
 }
 
 export default App;

@@ -1,15 +1,14 @@
-import React from 'react'
-
 const Header = () => {
+  
   return (
     <header className='header'> 
       <h1>
         <img 
-          src="https://img.icons8.com/color/48/000000/fire-element.png" 
-          alt="fire icon" 
+          src="https://img.icons8.com/?size=48&id=5tH5sHqq0t2q&format=png" 
+          alt="warning icon" 
           style={{ width: "32px", height: "32px", marginRight: "8px" }}
         />
-        Wildfire Tracker (Powered By NASA)
+        Natural Disaster Tracker (Powered By NASA)
       </h1>
     </header>
   )
