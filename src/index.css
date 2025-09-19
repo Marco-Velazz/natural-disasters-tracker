@@ -44,4 +44,22 @@ body {
   margin-top: -70px;
 }
 
+:root {
+  --header-h: 60px; /* match your header's real height */
+}
+
+.map-shell {
+  position: relative;
+  margin-top: var(--header-h);
+  width: 100vw;
+  height: calc(100vh - var(--header-h));
+}
+
+.legend-wrap {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
 

@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react';
-import Map from './components/Map';
+import DisasterMap from './components/Map'; // file named Map.js, component is DisasterMap
 import Loader from './components/Loader';
 import Header from './components/Header';
 
 function App() {
-
-  // Array to store events
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-
-    // Fetch events from NASA EONET API
     const fetchEvents = async () => {
       try {
         const response = await fetch('https://eonet.gsfc.nasa.gov/api/v2.1/events?status=open&days=30&limit=200');
         const data = await response.json();
-
-        // Mapping data
         const formattedEvents = data.events.map(event => ({
           id: event.id,
           title: event.title,
           categories: event.categories,
           sources: event.sources,
-          geometry: event.geometries, // contains coordinates and date
+          geometry: event.geometries,
           link: event.link
         }));
-
         console.log('Fetched events:', formattedEvents);
-
         setEvents(formattedEvents);
       } catch (error) {
         console.error('Error fetching events:', error);
@@ -36,22 +28,21 @@ function App() {
         setLoading(false);
       }
     };
-
     fetchEvents();
   }, []);
 
   return (
-  <div>
-    {loading ? (
-      <Loader />
-    ) : (
-      <>
-        <Header />
-        <Map events={events} />
-      </>
-    )}
-  </div>
-);
+    <div>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <Header />
+          <DisasterMap events={events} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export default App;
