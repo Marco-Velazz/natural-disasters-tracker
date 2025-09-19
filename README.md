@@ -1,33 +1,11 @@
-# Getting Started with Create React App
+# About the project
+This project was created to track ongoing natural disasters such as wildfires, volcanic eruptions, and more. With the help of NASA's Events API for storm tracking and Google Maps API for visual plotting and map rendering, this tracker is fully functional and displays current, ongoing natural disasters within the past 30 days. Features of this tracker include live icons, infoboxes with information upon clicking an icon, live links to each event, and more features coming. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Visit the project
+```https://natural-disaster-tracker.netlify.app/```
 
-## Available Scripts
+# Project Makeup
+This project was made possible using React
 
-In the project directory, you first must run:
 
-### `npm install google-map-react`
 
-Then, to see the working web application, run:
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
