@@ -76,7 +76,8 @@ function Map({ events }) {
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY}>
-      <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={4} options={mapOptions}>
+      <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={4}
+      options={mapOptions} onLoad={onLoad} onIdle={onIdle}>
         {eventsByCategory.map((cat) =>
           cat.events.map((ev) => (
           <Marker
@@ -95,7 +96,7 @@ function Map({ events }) {
             onCloseClick={() => setSelected(null)}
           >
             <div style={{ maxWidth: 260 }}>
-              <h3 style={{margin: 0 }}>{selected.title}</h3>
+              <h3 style={{margin: 0 }}>{selected.event.title}</h3>
               <p style={{ margin: "4px 0"}}>
                 <strong>Name:</strong> {selected.event.title}
               </p>
