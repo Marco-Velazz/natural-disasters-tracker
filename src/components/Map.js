@@ -104,7 +104,7 @@ return (
     >
       <GoogleMap
         // Make the map fill the wrapper instead of the whole viewport
-        mapContainerStyle={{ width: "100%", height: "100%" }}
+        mapContainerStyle={{ containerStyle }}
         center={defaultCenter}
         zoom={4}
         options={mapOptions}
