@@ -9,7 +9,7 @@ export default function CategoryLegend({
   onClear,
 }) {
   return (
-    <div style={{ position: "absolute", top: 12, right: 12, zIndex: 1000 }}>
+    <div style={{ position: "absolute", top: 64, right: 12, zIndex: 1000 }}>
       {!legendOpen && (
         <button
           onClick={() => setLegendOpen(true)}
