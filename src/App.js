@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import DisasterMap from './components/Map'; // file named Map.js, component is DisasterMap
+import DisasterMap from './components/DisasterMap';
 import Loader from './components/Loader';
 import Header from './components/Header';
 
