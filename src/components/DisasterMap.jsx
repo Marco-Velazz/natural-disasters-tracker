@@ -41,6 +41,13 @@ function DisasterMap({ events }) {
   const [mapRef, setMapRef] = useState(null);
   const onLoad = useCallback((map) => setMapRef(map), []);
 
+  
+// Call clampCenter with the Map
+  const onIdle = useCallback(() => {
+    if (!mapRef || typeof mapRef.getCenter !== "function") return;
+    clampCenter(mapRef);
+  }, [mapRef]);
+
   // Timeline frame (for storms)
   const currentFrame = useMemo(() => {
     if (!selected?.event?.geometry) return null;
@@ -130,6 +137,7 @@ function DisasterMap({ events }) {
           zoom={4}
           options={mapOptions}
           onLoad={onLoad}
+          onIdle={onIdle}
         >
           {/* Event markers */}
           {eventsByCategory.flatMap((cat) =>
