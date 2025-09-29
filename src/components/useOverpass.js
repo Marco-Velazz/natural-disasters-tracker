@@ -44,7 +44,7 @@ export default function useOverpass({ lat, lng, radiusM = 50000, tags = [] }) {
       .finally(() => setLoading(false));
 
     return () => ctrl.abort();
-  }, [lat, lng, radiusM, tagsKey]);
+  }, [lat, lng, radiusM, tagsKey, tags]);
 
   return { features, loading, err };
 }
