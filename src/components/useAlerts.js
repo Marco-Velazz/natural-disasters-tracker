@@ -7,8 +7,11 @@ export default function useAlerts(point, { debug = false } = {}) {
   const [err, setErr] = useState(null);
   const ctrlRef = useRef(null);
 
+  const lat = point?.lat ?? null;
+  const lng = point?.lng ?? null;
+
   useEffect(() => {
-    if (!point || !isFinite(point.lat) || !isFinite(point.lng)) return;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
     setLoading(true);
     setErr(null);
@@ -28,37 +31,41 @@ export default function useAlerts(point, { debug = false } = {}) {
 
     (async () => {
       try {
-        // 1) Try point query
+        // 1) point query (US-only; returns 400 if outside coverage)
         const pUrl = new URL(`${base}/alerts/active`);
-        pUrl.searchParams.set("point", `${point.lat},${point.lng}`);
-        // Reduce noise to current actionable alerts
+        pUrl.searchParams.set("point", `${lat},${lng}`);
         pUrl.searchParams.set("status", "actual");
         pUrl.searchParams.set("message_type", "alert,update");
         log("GET", pUrl.toString());
-        let r = await fetch(pUrl.toString(), { signal: ctrl.signal, headers });
-        if (!r.ok) throw new Error(`NWS alerts point HTTP ${r.status}`);
-        let j = await r.json();
+
+        const r = await fetch(pUrl.toString(), { signal: ctrl.signal, headers });
+
+        if (!r.ok) {
+          if (r.status === 400) {
+            // Friendly, typed error for UI
+            setErr({ code: "OUTSIDE_US", message: "Location outside of the United States. NWS alerts are US-only." });
+            setLoading(false);
+            return;
+          }
+          throw new Error(`NWS alerts point HTTP ${r.status}`);
+        }
+
+        const j = await r.json();
         let feats = j?.features ?? [];
         log("point features:", feats.length);
 
-        if (feats.length === 0) {
-          // 2) Resolve zones for the point
-          const ptsUrl = `${base}/points/${point.lat},${point.lng}`;
+        // 2) Fallbacks (zones/state) Only if we’re still inside US but got 0 features
+        if (!feats.length) {
+          const ptsUrl = `${base}/points/${lat},${lng}`;
           log("GET", ptsUrl);
           const pr = await fetch(ptsUrl, { signal: ctrl.signal, headers });
+
           if (pr.ok) {
             const pj = await pr.json();
             const props = pj?.properties || {};
-            const zones = [
-              props.forecastZone,
-              props.fireWeatherZone,
-              props.county,
-            ].filter(Boolean);
-
+            const zones = [props.forecastZone, props.fireWeatherZone, props.county].filter(Boolean);
             const state = props?.relativeLocation?.properties?.state;
-            log("zones:", zones, "state:", state);
 
-            // Try each zone in order
             for (const zHref of zones) {
               const zoneId = String(zHref).split("/").pop();
               if (!zoneId) continue;
@@ -76,8 +83,7 @@ export default function useAlerts(point, { debug = false } = {}) {
               }
             }
 
-            // 3) Last fallback: state area
-            if (feats.length === 0 && state) {
+            if (!feats.length && state) {
               const aUrl = new URL(`${base}/alerts/active`);
               aUrl.searchParams.set("area", state);
               aUrl.searchParams.set("status", "actual");
@@ -95,17 +101,14 @@ export default function useAlerts(point, { debug = false } = {}) {
 
         setAlerts(feats);
       } catch (e) {
-        if (e.name !== "AbortError") {
-          setErr(e);
-          log("error:", e);
-        }
+        if (e.name !== "AbortError") setErr(e);
       } finally {
         setLoading(false);
       }
     })();
 
     return () => ctrl.abort();
-  }, [point?.lat, point?.lng, debug]);
+  }, [lat, lng, debug]);
 
   return { alerts, loading, err };
 }

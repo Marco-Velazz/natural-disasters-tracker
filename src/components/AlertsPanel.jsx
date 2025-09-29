@@ -10,7 +10,6 @@ export default function AlertsPanel({ alerts, loading, err }) {
     return () => clearTimeout(t);
   }, [loading]);
 
-  // Polygons (when geometry exists)
   const polys = alerts
     .map(a => {
       const g = a?.geometry;
@@ -20,6 +19,8 @@ export default function AlertsPanel({ alerts, loading, err }) {
       return null;
     })
     .filter(Boolean);
+
+  const isOutsideUS = err && err.code === "OUTSIDE_US";
 
   return (
     <>
@@ -47,8 +48,15 @@ export default function AlertsPanel({ alerts, loading, err }) {
       <div style={panel}>
         <strong style={{ display: "block", marginBottom: 6 }}>Active Alerts (US Only)</strong>
 
-        {/* Error → Loading → Empty → List */}
-        {err && (
+        {/* Custom outside-US message */}
+        {isOutsideUS && (
+          <div style={muted}>
+            Location outside of the United States. Please select an icon within the US.
+          </div>
+        )}
+
+        {/* Generic error (only if not outside-US) */}
+        {!isOutsideUS && err && (
           <div style={errStyle}>
             {err.message ? String(err.message) : String(err)}
           </div>

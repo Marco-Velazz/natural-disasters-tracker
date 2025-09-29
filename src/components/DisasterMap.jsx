@@ -40,7 +40,6 @@ function DisasterMap({ events }) {
   // Map lifecycle
   const [mapRef, setMapRef] = useState(null);
   const onLoad = useCallback((map) => setMapRef(map), []);
-  const onIdle = useCallback(() => clampCenter(mapRef), [mapRef]);
 
   // Timeline frame (for storms)
   const currentFrame = useMemo(() => {
@@ -76,10 +75,15 @@ function DisasterMap({ events }) {
 
   const POP_RADIUS_KM = 50;
   const { totalPop, loading: popLoading, err: popErr } = usePopulationNearby({
-    lat: selectedPoint?.lat,
-    lng: selectedPoint?.lng,
+    lat: selectedPoint?.lat ?? null,
+    lng: selectedPoint?.lng ?? null,
     radiusKm: POP_RADIUS_KM,
   });
+
+  const OVERPASS_TAGS = useMemo(
+    () => ["amenity=hospital", "aeroway=aerodrome", "power=plant"],
+    []
+  );
 
   const INFRA_RADIUS_M = 50000;
   const {
@@ -87,10 +91,10 @@ function DisasterMap({ events }) {
     loading: infraLoading,
     err: infraErr,
   } = useOverpass({
-    lat: selectedPoint?.lat,
-    lng: selectedPoint?.lng,
+    lat: selectedPoint?.lat ?? null,
+    lng: selectedPoint?.lng ?? null,
     radiusM: INFRA_RADIUS_M,
-    tags: ["amenity=hospital", "aeroway=aerodrome", "power=plant"],
+    tags: OVERPASS_TAGS,
   });
 
   // Severity calculation
@@ -126,7 +130,6 @@ function DisasterMap({ events }) {
           zoom={4}
           options={mapOptions}
           onLoad={onLoad}
-          onIdle={onIdle}
         >
           {/* Event markers */}
           {eventsByCategory.flatMap((cat) =>

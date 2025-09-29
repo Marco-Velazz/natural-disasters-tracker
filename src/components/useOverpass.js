@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 /* Query Overpass for POIs within a radius (meters) */
 export default function useOverpass({ lat, lng, radiusM = 50000, tags = [] }) {
@@ -7,13 +7,24 @@ export default function useOverpass({ lat, lng, radiusM = 50000, tags = [] }) {
   const [err, setErr] = useState(null);
   const ctrlRef = useRef(null);
 
-  useEffect(() => {
-    if (lat == null || lng == null || !tags.length) return;
-    setLoading(true); setErr(null); setFeatures([]);
-    if (ctrlRef.current) ctrlRef.current.abort();
-    const ctrl = new AbortController(); ctrlRef.current = ctrl;
+  // Stable key for dependency
+  const tagsKey = useMemo(() => (Array.isArray(tags) ? tags.join("|") : ""), [tags]);
 
-    const qTags = tags.map(t => `node[${t}](around:${radiusM},${lat},${lng});`).join("");
+  useEffect(() => {
+    if (lat == null || lng == null || !tagsKey) return;
+
+    setLoading(true);
+    setErr(null);
+    setFeatures([]);
+
+    if (ctrlRef.current) ctrlRef.current.abort();
+    const ctrl = new AbortController();
+    ctrlRef.current = ctrl;
+
+    const qTags = tags
+      .map(t => `node[${t}](around:${radiusM},${lat},${lng});`)
+      .join("");
+
     const query = `
       [out:json][timeout:25];
       (
@@ -33,7 +44,7 @@ export default function useOverpass({ lat, lng, radiusM = 50000, tags = [] }) {
       .finally(() => setLoading(false));
 
     return () => ctrl.abort();
-  }, [lat, lng, radiusM, JSON.stringify(tags)]);
+  }, [lat, lng, radiusM, tagsKey]);
 
   return { features, loading, err };
 }
