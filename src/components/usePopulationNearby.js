@@ -1,4 +1,3 @@
-// components/usePopulationNearby.js
 import { useEffect, useState, useRef } from "react";
 
 /* Rough population estimate using GeoNames "nearby place names" */
@@ -22,30 +21,22 @@ export default function usePopulationNearby({ lat, lng, radiusKm = 50, maxRows =
     const ctrl = new AbortController(); 
     ctrlRef.current = ctrl;
 
-    const url = new URL("https://api.geonames.org/findNearbyPlaceNameJSON");
+    const url = new URL("/.netlify/functions/geonames", window.location.origin);
     url.searchParams.set("lat", String(lat));
     url.searchParams.set("lng", String(lng));
-    url.searchParams.set("radius", String(radiusKm));
+    url.searchParams.set("radiusKm", String(radiusKm));
     url.searchParams.set("maxRows", String(maxRows));
-    url.searchParams.set("style", "FULL");
-    url.searchParams.set("username", user);
 
     fetch(url.toString(), { signal: ctrl.signal })
-      .then(r => {
-        if (!r.ok) {
-          if (r.status === 401) throw new Error("GeoNames unauthorized (check username & enable web services)");
-          throw new Error(`HTTP ${r.status}`);
-        }
-        return r.json();
-      })
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(json => {
-        const list = json?.geonames ?? [];
-        setCities(list);
-        const sum = list.reduce((acc, c) => acc + (c.population || 0), 0);
-        setTotalPop(sum || 0);
-      })
-      .catch(e => { if (e.name !== "AbortError") setErr(e); })
-      .finally(() => setLoading(false));
+      const list = json?.geonames ?? [];
+      setCities(list);
+      const sum = list.reduce((acc, c) => acc + (c.population || 0), 0);
+      setTotalPop(sum || 0);
+    })
+    .catch(e => { if (e.name !== "AbortError") setErr(e); })
+    .finally(() => setLoading(false));
 
     return () => ctrl.abort();
   }, [lat, lng, radiusKm, maxRows, user]);
