@@ -6,7 +6,7 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing lat/lng or username" }) };
     }
 
-  const url = new URL("https://api.geonames.org/findNearbyPlaceNameJSON");
+  const url = new URL("http://api.geonames.org/findNearbyPlaceNameJSON");
   url.searchParams.set("lat", String(lat));
   url.searchParams.set("lng", String(lng));
   url.searchParams.set("radius", String(radiusKm));
